@@ -12,13 +12,16 @@ import os
 from os import path
 import sys
 
-FORM_CLASS,_=loadUiType(path.join(path.dirname(__file__),"task1_design.ui"))
+FORM_CLASS, _ = loadUiType(path.join(path.dirname(__file__), "task1_design.ui"))
 
-class MainApp(QMainWindow , FORM_CLASS):
-    def __init__(self,parent=None):
-        super(MainApp,self).__init__(parent)
+
+class MainApp(QMainWindow, FORM_CLASS):
+    def __init__(self, parent=None):
+        super(MainApp, self).__init__(parent)
         QMainWindow.__init__(self)
         self.setupUi(self)
+        self.button = self.findChild(QPushButton, "pushButton")
+        self.button.clicked.connect(self.clicker)
         self.data = np.fromfile("emg_healthy.dat", dtype=np.int16)
         self.data = (self.data - np.min(self.data)) / (np.max(self.data) - np.min(self.data))
     # Create a counter to keep track of the current sample
@@ -39,6 +42,12 @@ class MainApp(QMainWindow , FORM_CLASS):
         self.PlayButton2.clicked.connect(self.togglePause2)
         self.rewindButton1.clicked.connect(self.rewind)
         self.rewindButton2.clicked.connect(self.rewind)
+        self.sampling_rate = 3000  # number of samples/ total time
+
+    def clicker(self):  # -----------
+        filename = []
+        filename.append(QFileDialog.getOpenFileNames())
+
     def togglePause1(self):
         # Toggle the pause state
         self.paused1 = not self.paused1
@@ -49,6 +58,7 @@ class MainApp(QMainWindow , FORM_CLASS):
         else:
             # If unpaused, start the timer
             self.timer1.start()
+
     def togglePause2(self):
         # Toggle the pause state
         self.paused2 = not self.paused2
@@ -59,43 +69,52 @@ class MainApp(QMainWindow , FORM_CLASS):
         else:
             # If unpaused, start the timer
             self.timer2.start()
+
     def rewind(self):
         self.current_sample = 0
-    def update(self):
-    # Clear the current plot
-       self.graphicsView.clear()
 
-       end_index = min(self.current_sample + 25, len(self.data))
+    def update(self):
+        # Clear the current plot
+         self.graphicsView.clear()
+
+         end_index = min(self.current_sample + 1500, len(self.data))
     # Update the plot with the current sample
-       x = np.arange(self.current_sample, end_index)
-       y = self.data[self.current_sample:end_index]
-       self.graphicsView.plot(x, y, pen='red')
+       #x = np.arange(0, end_index)
+         x= np.arange(self.current_sample, end_index) / self.sampling_rate
+         y = self.data[self.current_sample:end_index]
+         self.graphicsView.plot(x, y, pen='red')
 
     # Set the x-axis range based on the current sample and the length of the data
        #self.graphicsView.setXRange(self.current_sample, len(self.data))
 
     # Add a grid
-       self.graphicsView.showGrid(x=True, y=True)
+         self.graphicsView.showGrid(x=True, y=True)
 
     # Update the current sample
-       self.current_sample += 25
+         self.current_sample += 1500
 
     # If we've reached the end of the data, loop back to the start
-       if self.current_sample >= len(self.data):
-         self.current_sample = 0
+         if self.current_sample >= len(self.data):
+           self.current_sample = 0
     def update2(self):
+
     # Clear the current plot
        self.graphicsView_2.clear()
 
-       #end_index = min(self.current_sample + 1000, len(self.data))
+       end_index = min(self.current_sample + 1500, len(self.data))
     # Update the plot with the current sample
-       self.graphicsView_2.plot(self.data[self.current_sample:self.current_sample + 1000])
+       #x = np.arange(0, end_index)
+       x= np.arange(self.current_sample, end_index) / self.sampling_rate
+       y = self.data[self.current_sample:end_index]
+       self.graphicsView_2.plot(x, y, pen='blue')
+    #end_index = min(self.current_sample + 1000, len(self.data))
+    # Update the plot with the current sample
 
     # Add a grid
        self.graphicsView_2.showGrid(x=True, y=True)
 
     # Update the current sample
-       self.current_sample += 1000
+       self.current_sample += 1500
 
     # If we've reached the end of the data, loop back to the start
        if self.current_sample >= len(self.data):
