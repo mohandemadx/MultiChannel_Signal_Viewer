@@ -21,20 +21,24 @@ class MainApp(QMainWindow, FORM_CLASS):
         QMainWindow.__init__(self)
         self.setupUi(self)
         self.button = self.findChild(QPushButton, "pushButton")
-        self.button.clicked.connect(self.clicker)
-        self.data = np.fromfile("emg_healthy.dat", dtype=np.int16)
-        self.data = (self.data - np.min(self.data)) / (np.max(self.data) - np.min(self.data))
+        #self.data = np.fromfile("emg_healthy.dat", dtype=np.int16)
+        #self.data = (self.data - np.min(self.data)) / (np.max(self.data) - np.min(self.data))
+        #self.ComboBox.setCurrentIndex(-1)
     # Create a counter to keep track of the current sample
         self.current_sample = 0
+        self.file_paths = {}  # List to store file paths
+
+        # Open the file if the item in the List doubleClicked
+        self.listWidget.itemDoubleClicked.connect(self.open_file)
 
     # Create a timer object
         self.timer1 = pg.QtCore.QTimer()
         self.timer2 = pg.QtCore.QTimer()
-        self.timer1.setInterval(500)  # set the timer to fire every 50 ms
-        self.timer1.timeout.connect(self.update)
-        self.timer1.start()
-        self.timer2.setInterval(500)  # set the timer to fire every 50 ms
-        self.timer2.timeout.connect(self.update2)
+       # self.timer1.setInterval(1000)  # set the timer to fire every 50 ms
+       # self.timer1.timeout.connect(self.update)
+        # self.timer1.start()
+        self.timer2.setInterval(1000)  # set the timer to fire every 50 ms
+       # self.timer2.timeout.connect(self.update2)
         self.timer2.start()
         self.paused1 = False
         self.paused2 = False
@@ -42,11 +46,55 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.PlayButton2.clicked.connect(self.togglePause2)
         self.rewindButton1.clicked.connect(self.rewind)
         self.rewindButton2.clicked.connect(self.rewind)
-        self.sampling_rate = 3000  # number of samples/ total time
+        self.uploadButton.clicked.connect(self.uploadFun)
+        self.deleteButton.clicked.connect(self.deleteFun)
+        self.plotsignalButton.clicked.connect(self.plotSignal)
 
-    def clicker(self):  # -----------
-        filename = []
-        filename.append(QFileDialog.getOpenFileNames())
+        self.sampling_frequency = 1000 # number of samples/ total time
+    def uploadFun(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+
+        files, _ = QFileDialog.getOpenFileNames(
+            self, "QFileDialog.getOpenFileNames()", "", "All Files (*);;Text Files (*.txt)", options=options)
+
+        if files:
+            for file in files:
+                # Store file path
+                fileName = os.path.basename(file)
+                self.file_paths[fileName] = file
+                # Add file NAME as a clickable link in the QListWidget
+                item = QListWidgetItem(fileName)
+                item.setToolTip(file)  # Set the full path as the tooltip for reference
+                item.setFlags(item.flags() | pg.QtCore.Qt.ItemIsSelectable)
+                self.listWidget.addItem(item)
+
+    def retrievedata(self):
+        chosenpath=self.getFilePath()
+        self.data = np.fromfile(chosenpath, dtype=np.int16)
+        self.data = (self.data - np.min(self.data)) / (np.max(self.data) - np.min(self.data)) #standardization
+    def getFilePath(self):
+        selected_item = self.listWidget.currentItem()
+        if selected_item:
+            selected_text = selected_item.text()
+            for filename, file_path in self.file_paths.items():
+                if selected_text == filename:
+                    # Return the file path when a match is found
+                    return file_path
+            # Return None if no match is found
+            return None
+        else:
+            # Return None if no item is selected
+            return None
+    def deleteFun(self):
+        selected_item = self.listWidget.currentItem()
+        if selected_item:
+            file_path = selected_item.toolTip()
+            self.file_paths.remove(file_path)  # Remove the file path from the array
+            self.listWidget.takeItem(
+                self.listWidget.row(selected_item))  # Remove the item from the QList
+
+
 
     def togglePause1(self):
         # Toggle the pause state
@@ -77,12 +125,12 @@ class MainApp(QMainWindow, FORM_CLASS):
         # Clear the current plot
          self.graphicsView.clear()
 
-         end_index = min(self.current_sample + 1500, len(self.data))
+         end_index = min(self.current_sample + 1000, len(self.data))
     # Update the plot with the current sample
        #x = np.arange(0, end_index)
-         x= np.arange(self.current_sample, end_index) / self.sampling_rate
+         x= np.arange(self.current_sample, end_index) / self.sampling_frequency
          y = self.data[self.current_sample:end_index]
-         self.graphicsView.plot(x, y, pen='red')
+         self.graphicsView.plot(x, y, pen='white')
 
     # Set the x-axis range based on the current sample and the length of the data
        #self.graphicsView.setXRange(self.current_sample, len(self.data))
@@ -91,7 +139,7 @@ class MainApp(QMainWindow, FORM_CLASS):
          self.graphicsView.showGrid(x=True, y=True)
 
     # Update the current sample
-         self.current_sample += 1500
+         self.current_sample += 1000
 
     # If we've reached the end of the data, loop back to the start
          if self.current_sample >= len(self.data):
@@ -101,10 +149,10 @@ class MainApp(QMainWindow, FORM_CLASS):
     # Clear the current plot
        self.graphicsView_2.clear()
 
-       end_index = min(self.current_sample + 1500, len(self.data))
+       end_index = min(self.current_sample + 1000, len(self.data))
     # Update the plot with the current sample
        #x = np.arange(0, end_index)
-       x= np.arange(self.current_sample, end_index) / self.sampling_rate
+       x= np.arange(self.current_sample, end_index) / self.sampling_frequency
        y = self.data[self.current_sample:end_index]
        self.graphicsView_2.plot(x, y, pen='blue')
     #end_index = min(self.current_sample + 1000, len(self.data))
@@ -114,11 +162,31 @@ class MainApp(QMainWindow, FORM_CLASS):
        self.graphicsView_2.showGrid(x=True, y=True)
 
     # Update the current sample
-       self.current_sample += 1500
+       self.current_sample += 1000
 
     # If we've reached the end of the data, loop back to the start
        if self.current_sample >= len(self.data):
          self.current_sample = 0
+    def open_file(self, item):
+        file_path = item.text()
+        if os.path.isfile(file_path):
+            os.startfile(file_path)
+    def plotSignal(self):
+
+        if self.radioButton1.isChecked():
+            data = self.retrievedata()
+            self.timer1 = pg.QtCore.QTimer()
+            self.timer1.setInterval(1000)  # set the timer to fire every 50 ms
+            self.timer1.timeout.connect(self.update)
+            self.timer1.start()
+        else:
+            data = self.retrievedata()
+            self.timer2 = pg.QtCore.QTimer()
+            self.timer2.setInterval(1000)  # set the timer to fire every 50 ms
+            self.timer2.timeout.connect(self.update2)
+            self.timer2.start()
+
+
 
 
 """
