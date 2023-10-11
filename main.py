@@ -27,7 +27,7 @@ class MainApp(QMainWindow, FORM_CLASS):
     # Create a counter to keep track of the current sample
         self.current_sample = 0
         self.file_paths = {}  # List to store file paths
-
+        self.keystoremove=[]
         # Open the file if the item in the List doubleClicked
         self.listWidget.itemDoubleClicked.connect(self.open_file)
 
@@ -37,9 +37,9 @@ class MainApp(QMainWindow, FORM_CLASS):
        # self.timer1.setInterval(1000)  # set the timer to fire every 50 ms
        # self.timer1.timeout.connect(self.update)
         # self.timer1.start()
-        self.timer2.setInterval(1000)  # set the timer to fire every 50 ms
+       # self.timer2.setInterval(1000)  # set the timer to fire every 50 ms
        # self.timer2.timeout.connect(self.update2)
-        self.timer2.start()
+        #self.timer2.start()
         self.paused1 = False
         self.paused2 = False
         self.PlayButton1.clicked.connect(self.togglePause1)
@@ -49,7 +49,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.uploadButton.clicked.connect(self.uploadFun)
         self.deleteButton.clicked.connect(self.deleteFun)
         self.plotsignalButton.clicked.connect(self.plotSignal)
-
+        self.comboBox.currentIndexChanged.connect(self.change_plot_color)
         self.sampling_frequency = 1000 # number of samples/ total time
     def uploadFun(self):
         options = QFileDialog.Options()
@@ -123,14 +123,21 @@ class MainApp(QMainWindow, FORM_CLASS):
 
     def update(self):
         # Clear the current plot
-         self.graphicsView.clear()
+         #self.graphicsView.clear()
 
-         end_index = min(self.current_sample + 1000, len(self.data))
+         end_index = min(self.current_sample + 2000, len(self.data))
     # Update the plot with the current sample
        #x = np.arange(0, end_index)
-         x= np.arange(self.current_sample, end_index) / self.sampling_frequency
-         y = self.data[self.current_sample:end_index]
-         self.graphicsView.plot(x, y, pen='white')
+         x= np.arange(self.current_sample,end_index )/ self.sampling_frequency
+         y = self.data[self.current_sample: end_index]
+
+         window_size = 5  # Set the desired window size in seconds
+         x_min = max(0, x[-1] - window_size)  # Adjust the minimum x based on window size
+         x_max = x[-1]  # Maximum x based on the latest data
+
+    # Update the x-axis range
+         self.graphicsView.setXRange(x_min, x_max)
+         self.graphicsView.plot(x, y, pen=self.change_plot_color() )
 
     # Set the x-axis range based on the current sample and the length of the data
        #self.graphicsView.setXRange(self.current_sample, len(self.data))
@@ -139,44 +146,70 @@ class MainApp(QMainWindow, FORM_CLASS):
          self.graphicsView.showGrid(x=True, y=True)
 
     # Update the current sample
-         self.current_sample += 1000
+         self.current_sample += 2000
 
     # If we've reached the end of the data, loop back to the start
          if self.current_sample >= len(self.data):
            self.current_sample = 0
+           self.graphicsView.clear()
     def update2(self):
+        end_index = min(self.current_sample + 2000, len(self.data))
 
-    # Clear the current plot
-       self.graphicsView_2.clear()
+    # Update the plot with the current sample
+    # x = np.arange(0, end_index)
+        x = np.arange(self.current_sample, end_index) / self.sampling_frequency
+        y = self.data[self.current_sample: end_index]
 
-       end_index = min(self.current_sample + 1000, len(self.data))
-    # Update the plot with the current sample
-       #x = np.arange(0, end_index)
-       x= np.arange(self.current_sample, end_index) / self.sampling_frequency
-       y = self.data[self.current_sample:end_index]
-       self.graphicsView_2.plot(x, y, pen='blue')
-    #end_index = min(self.current_sample + 1000, len(self.data))
-    # Update the plot with the current sample
+        window_size = 5  # Set the desired window size in seconds
+        x_min = max(0, x[-1] - window_size)  # Adjust the minimum x based on window size
+        x_max = x[-1]  # Maximum x based on the latest data
+
+    # Update the x-axis range
+        self.graphicsView_2.setXRange(x_min, x_max)
+        self.graphicsView_2.plot(x, y, pen=self.plot_color )
+
+    # Set the x-axis range based on the current sample and the length of the data
+    # self.graphicsView.setXRange(self.current_sample, len(self.data))
 
     # Add a grid
-       self.graphicsView_2.showGrid(x=True, y=True)
+        self.graphicsView_2.showGrid(x=True, y=True)
 
     # Update the current sample
-       self.current_sample += 1000
+        self.current_sample += 2000
 
     # If we've reached the end of the data, loop back to the start
-       if self.current_sample >= len(self.data):
-         self.current_sample = 0
+        if self.current_sample >= len(self.data):
+           self.current_sample = 0
+           self.graphicsView_2.clear()
+
+
     def open_file(self, item):
         file_path = item.text()
         if os.path.isfile(file_path):
             os.startfile(file_path)
+    def change_plot_color(self):
+        selected_color = self.comboBox.currentText()
+
+        # Map color names to QColor objects
+        color_mapping = {
+            "red": QColor("red"),
+            "blue": QColor("blue"),
+            "white": QColor("white"),
+            "purple": QColor("purple"),
+            "yellow":  QColor("yellow"),
+            "green": QColor("green")
+        }
+
+        self.plot_color = color_mapping[selected_color]
+        return self.plot_color
+
+
     def plotSignal(self):
 
         if self.radioButton1.isChecked():
             data = self.retrievedata()
             self.timer1 = pg.QtCore.QTimer()
-            self.timer1.setInterval(1000)  # set the timer to fire every 50 ms
+            self.timer1.setInterval(500)  # set the timer to fire every 50 ms
             self.timer1.timeout.connect(self.update)
             self.timer1.start()
         else:
