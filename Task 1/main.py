@@ -86,6 +86,19 @@ class MainApp(QMainWindow, FORM_CLASS):
         # signal checkboxes
         self.signal_checkboxes = []
 
+        # Control
+        self.horizontalScrollBar.setRange(0, len(self.x1))
+        self.horizontalScrollBar.valueChanged.connect(self.scroll_graph)
+        self.horizontalScrollBar_2.setRange(0, len(self.x2))
+        self.horizontalScrollBar_2.valueChanged.connect(self.scroll_graph2)
+        self.ZoomInButton1.clicked.connect(self.zoomIn)
+        self.ZoomOutButton1.clicked.connect(self.zoomOut)
+        self.ZoomInButton2.clicked.connect(self.zoomIn2)
+        self.ZoomOutButton2.clicked.connect(self.zoomOut2)
+
+        #Fixing windows
+
+
     # Class Functions
     def sync_fun(self):
         if self.syncCheckBox.isChecked():
@@ -190,6 +203,16 @@ class MainApp(QMainWindow, FORM_CLASS):
         else:
             # If unpaused, start the timer
             self.timer1.start()
+        if self.syncCheckBox.isChecked():
+            self.paused2 = not self.paused2
+
+            if self.paused2:
+                # If paused, stop the timer
+                self.timer2.stop()
+            else:
+                # If unpaused, start the timer
+                self.timer2.start()
+
 
     def togglePause2(self):
         # Toggle the pause state
@@ -201,14 +224,30 @@ class MainApp(QMainWindow, FORM_CLASS):
         else:
             # If unpaused, start the timer
             self.timer2.start()
+        if self.syncCheckBox.isChecked():
+            self.paused1 = not self.paused1
+
+            if self.paused1:
+                # If paused, stop the timer
+                self.timer1.stop()
+            else:
+                # If unpaused, start the timer
+                self.timer1.start()
 
     def rewind1(self):
         self.graphicsView.clear()
         self.idx_1 = 0
+        if self.syncCheckBox.isChecked():
+            self.graphicsView_2.clear()
+            self.idx_2=0
 
     def rewind2(self):
         self.graphicsView_2.clear()
         self.idx_2 = 0
+        if self.syncCheckBox.isChecked():
+            self.graphicsView.clear()
+            self.idx_1 = 0
+
 
     def selected_color(self):
         selected_color = self.comboBox_color.currentText()
@@ -230,24 +269,33 @@ class MainApp(QMainWindow, FORM_CLASS):
         chosenpath = self.getFilePath()
         data = np.fromfile(chosenpath, dtype=np.int16)
         # standardization
-        data = (data - np.min(data)) / (np.max(data) - np.min(data))
+        #data = (data - np.min(data)) / (np.max(data) - np.min(data))
 
         return data
-        
+
     def update_data1(self):
-        self.graphicsView.clear()  # Clear the plot before updating
+        window_width=100
+        self.window_position=self.idx_1
+        self.x_min= self.window_position
+        self.x_max = min(len(self.x1), self.window_position + window_width)
+        self.graphicsView.setXRange(self.x_min, self.x_max)
+
         for i in range(len(self.plotdata1)):
             plot_item = self.graphicsView.plot(pen=self.colors1[i])
-            plot_item.setData(self.x1[:self.idx_1], self.plotdata1[i][:self.idx_1])
+            plot_item.setData(self.x1[self.x_min:self.x_max], self.plotdata1[i][self.x_min:self.x_max])
         self.idx_1 += 1
         if self.idx_1 >= len(self.x1):
             self.idx_1 = 0
-
     def update_data2(self):
-        self.graphicsView_2.clear()  # Clear the plot before updating
+        window_width2 = 100
+        self.window_position2 = self.idx_2
+        self.x2_min = self.window_position2
+        self.x2_max = min(len(self.x2), self.window_position2 + window_width2)
+        self.graphicsView_2.setXRange(self.x2_min, self.x2_max)
+
         for i in range(len(self.plotdata2)):
             plot_item = self.graphicsView_2.plot(pen=self.colors2[i])
-            plot_item.setData(self.x2[:self.idx_2], self.plotdata2[i][:self.idx_2])
+            plot_item.setData(self.x2[self.x2_min:self.x2_max], self.plotdata2[i][self.x2_min:self.x2_max])
         self.idx_2 += 1
         if self.idx_2 >= len(self.x2):
             self.idx_2 = 0
@@ -291,6 +339,51 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.layout2.addWidget(checkbox)
             self.signal_checkboxes.append(checkbox)
 
+    def scroll_graph(self, position):
+
+        self.window_width=100
+        self.window_position = position
+        self.x_min = max(0, position - self.window_width // 2)
+        self.x_max = min(len(self.x1), self.x_min + self.window_width)
+        self.graphicsView.setXRange(self.x_min, self.x_max)
+
+    def scroll_graph2(self, position):
+
+        self.window_width2=100
+        self.window_position2 = position
+        self.x2_min = max(0, position - self.window_width2 // 2)
+        self.x2_max = min(len(self.x2), self.x2_min + self.window_width2)
+        self.graphicsView_2.setXRange(self.x_min, self.x_max)
+    def zoomIn(self):
+        zoom_factor = 0.8
+        self.graphicsView.getViewBox().scaleBy((zoom_factor, zoom_factor))
+        if self.syncCheckBox.isChecked():
+            self.graphicsView_2.getViewBox().scaleBy((zoom_factor, zoom_factor))
+
+    def zoomOut(self):
+        zoom_factor = 1.2
+        self.graphicsView.getViewBox().scaleBy((zoom_factor, zoom_factor))
+        if self.syncCheckBox.isChecked():
+            self.graphicsView_2.getViewBox().scaleBy((zoom_factor, zoom_factor))
+
+    def zoomIn2(self):
+        zoom_factor = 0.8
+        self.graphicsView.getViewBox().scaleBy((zoom_factor, zoom_factor))
+        if self.syncCheckBox.isChecked():
+            self.graphicsView_2.getViewBox().scaleBy((zoom_factor, zoom_factor))
+
+    def zoomOut2(self):
+        zoom_factor = 1.2
+        self.graphicsView.getViewBox().scaleBy((zoom_factor, zoom_factor))
+        if self.syncCheckBox.isChecked():
+            self.graphicsView_2.getViewBox().scaleBy((zoom_factor, zoom_factor))
+
+#     def hideSignal(self):
+
+
+#    def stats(self):
+
+#    def addLabels(self):
 
 
 def main():
@@ -299,16 +392,6 @@ def main():
     window.show()
     app.exec_()
 
-if __name__ =='__main__':
+
+if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
-
-
