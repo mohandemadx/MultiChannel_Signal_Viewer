@@ -29,7 +29,6 @@ class MainApp(QMainWindow, FORM_CLASS):
         # self.graphicsView_2.setBackground('w')
         self.plotdata1 = []
         self.plotdata2 = []
-
         self.x1 = np.linspace(0, 10000, 10000)
         self.x2 = np.linspace(0, 10000, 10000)
         self.idx_1 = 0
@@ -40,6 +39,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.keystoremove = []
         self.colors1 = []
         self.colors2 = []
+
 
         # Create a timer object
         self.timer1 = pg.QtCore.QTimer()
@@ -86,6 +86,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         # signal checkboxes
         self.signal_checkboxes = []
 
+
         # Control
         self.horizontalScrollBar.setRange(0, len(self.x1))
         self.horizontalScrollBar.valueChanged.connect(self.scroll_graph)
@@ -96,10 +97,21 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.ZoomInButton2.clicked.connect(self.zoomIn2)
         self.ZoomOutButton2.clicked.connect(self.zoomOut2)
 
+
+
         #Fixing windows
+        self.graphicsView.scene().sigMouseMoved.connect(self.custom_pan)
+        self.x_min = 0
+        self.x_max = 1000  # Adjust this to your desired maximum
+        self.graphicsView.setXRange(self.x_min, self.x_max)
+
+        # Set the initial X range
+
 
 
     # Class Functions
+
+
     def sync_fun(self):
         if self.syncCheckBox.isChecked():
             sync_value = self.current_speed1
@@ -274,18 +286,26 @@ class MainApp(QMainWindow, FORM_CLASS):
         return data
 
     def update_data1(self):
-        window_width=100
-        self.window_position=self.idx_1
-        self.x_min= self.window_position
+        window_width = 100
+        self.window_position = self.idx_1
+        self.x_min = self.window_position
         self.x_max = min(len(self.x1), self.window_position + window_width)
         self.graphicsView.setXRange(self.x_min, self.x_max)
 
         for i in range(len(self.plotdata1)):
             plot_item = self.graphicsView.plot(pen=self.colors1[i])
-            plot_item.setData(self.x1[self.x_min:self.x_max], self.plotdata1[i][self.x_min:self.x_max])
+            if self.signal_checkboxes[i].isChecked():  # Check the visibility state
+                plot_item.setData(self.x1[self.x_min:self.x_max], self.plotdata1[i][self.x_min:self.x_max])
+            else:
+                self.graphicsView.clear()
+                self.update_data1
+
+
+
         self.idx_1 += 1
         if self.idx_1 >= len(self.x1):
             self.idx_1 = 0
+
     def update_data2(self):
         window_width2 = 100
         self.window_position2 = self.idx_2
@@ -319,37 +339,30 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.plotdata1.append(data)
             self.colors1.append(color)
             self.timer1.start(self.time_interval1)
-
             checkbox = QCheckBox(f'{self.label_ImportedFileName.text()}', self)
-
             checkbox.setChecked(True)
-            # checkbox.stateChanged.connect(self.toggle_signal_visibility)
             self.layout1.addWidget(checkbox)
             self.signal_checkboxes.append(checkbox)
+
 
         elif graph == 2:
             self.plotdata2.append(data)
             self.colors2.append(color)
             self.timer2.start(self.time_interval2)
-
             checkbox = QCheckBox(f'{self.label_ImportedFileName.text()}', self)
-
             checkbox.setChecked(True)
-            # checkbox.stateChanged.connect(self.toggle_signal_visibility)
             self.layout2.addWidget(checkbox)
-            self.signal_checkboxes.append(checkbox)
+
+
 
     def scroll_graph(self, position):
-
-        self.window_width=100
+        self.window_width = 100
         self.window_position = position
         self.x_min = max(0, position - self.window_width // 2)
         self.x_max = min(len(self.x1), self.x_min + self.window_width)
         self.graphicsView.setXRange(self.x_min, self.x_max)
-
     def scroll_graph2(self, position):
-
-        self.window_width2=100
+        self.window_width2 = 100
         self.window_position2 = position
         self.x2_min = max(0, position - self.window_width2 // 2)
         self.x2_max = min(len(self.x2), self.x2_min + self.window_width2)
@@ -378,7 +391,44 @@ class MainApp(QMainWindow, FORM_CLASS):
         if self.syncCheckBox.isChecked():
             self.graphicsView_2.getViewBox().scaleBy((zoom_factor, zoom_factor))
 
-#     def hideSignal(self):
+    def calculate_statistics(self, signal):
+        if len(signal) == 0:
+            return None
+
+        mean = np.mean(signal)
+        std_dev = np.std(signal)
+        minimum = np.min(signal)
+        maximum = np.max(signal)
+
+        statistics = {
+            'Mean': mean,
+            'Standard Deviation': std_dev,
+            'Minimum': minimum,
+            'Maximum': maximum
+        }
+
+        return statistics
+
+    def calculate_and_display_statistics(self):
+        for i, signal in enumerate(self.plotdata1):
+            statistics = self.calculate_statistics(signal)
+            if statistics:
+                # Assuming you have a label to display the statistics
+                self.statistics_label.setText(f"Statistics for Signal {i + 1}:\n")
+                for key, value in statistics.items():
+                    self.statistics_label.setText(f"{key}: {value}\n", append=True)
+    
+
+
+
+
+# def signal_visibility(self):
+      #  for i in self.plotdata1:
+          #  self.signal_checkboxes[i]=self.checkbox.isChecked()
+
+
+
+
 
 
 #    def stats(self):
