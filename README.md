@@ -11,8 +11,11 @@
 
   
 - ## Sync Between two graphs:
+  ### Synced
+  ![synced](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/3b0aeee4-58c9-4929-b825-89c768bf01c0) 
 
-![synced](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/3b0aeee4-58c9-4929-b825-89c768bf01c0) ![unsync](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/668d66ed-86df-4746-aa0c-9af546edccfe)
+  ### Unsynced:
+  ![unsync](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/668d66ed-86df-4746-aa0c-9af546edccfe)
 
   The two graphs are synced: same speed and same displayed frame.
 
