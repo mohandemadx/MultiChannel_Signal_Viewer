@@ -20,3 +20,5 @@
   The two graphs are synced: same speed and same displayed frame.
 
 - ## Supports .dat & .csv files:
+
+  ![Screenshot (30)](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/e7d33108-a919-4e40-a12b-1f44f6755588)
