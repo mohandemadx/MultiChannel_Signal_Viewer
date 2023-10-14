@@ -21,4 +21,4 @@
 
 - ## Supports .dat & .csv files:
 
-  ![Screenshot (30)](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/e7d33108-a919-4e40-a12b-1f44f6755588)
+  ![Screenshot (30)](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/86cd723b-01f0-42e8-a921-be3f88e59fe2)
