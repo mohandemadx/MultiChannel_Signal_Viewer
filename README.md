@@ -7,7 +7,12 @@
 
   You can Easily Zoom IN or OUT, Play & Pause, Rewind and Adjusting the Signal Speed.
 
-- ## Displaying Multiple Signals on the same graph:
+- ## Displaying Multiple Signals on the same graph with multiple color options:
 
 
-- 
+- ## Sync Between two graphs:
+
+
+  The two graphs are synced: same speed and same displayed frame.
+
+- ## Supports .dat & .csv files:
