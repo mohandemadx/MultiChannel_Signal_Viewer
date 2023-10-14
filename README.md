@@ -9,7 +9,8 @@
 
 - ## Displaying Multiple Signals on the same graph with multiple color options:
 
-  
+  ![Screenshot (33)](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/8d100190-1dc4-4ea1-8b6b-7d1c0f4b623b)
+
 - ## Sync Between two graphs:
   ### Synced
   ![synced](https://github.com/mohandemadx/MultiChannel_Signal_Viewer/assets/102548631/3b0aeee4-58c9-4929-b825-89c768bf01c0) 
